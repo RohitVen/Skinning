@@ -58,3 +58,4 @@ License.
 
 The author of PMD models is Animasa, you can download the model with the
 official editor from his webpage [VPVP](http://www.geocities.jp/higuchuu4/index_e.htm).
+# Skinning
