@@ -1,0 +1,2 @@
+/usr/bin/ar cr libutgraphicsutil.a  CMakeFiles/utgraphicsutil.dir/lib/debuggl.cc.o CMakeFiles/utgraphicsutil.dir/lib/bitmap.cpp.o CMakeFiles/utgraphicsutil.dir/lib/jpegio.cc.o CMakeFiles/utgraphicsutil.dir/lib/mmdadapter.cc.o
+/usr/bin/ranlib libutgraphicsutil.a
