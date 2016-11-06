@@ -91,6 +91,8 @@ glm/gtx/io.hpp
 -
 glm/gtx/transform.hpp
 -
+iostream
+-
 
 /v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/bone_geometry.h
 ostream
@@ -104,6 +106,8 @@ limits
 glm/glm.hpp
 -
 mmdadapter.h
+-
+iostream
 -
 
 /v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/config.h
@@ -171,6 +175,8 @@ glm/gtx/io.hpp
 -
 debuggl.h
 -
+iostream
+-
 shaders/default.vert
 /v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/shaders/default.vert
 shaders/default.geom
@@ -192,18 +198,6 @@ config.h
 vector
 -
 glm/glm.hpp
--
-
-/v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/render_pass.cc
-GL/glew.h
--
-render_pass.h
-/v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/render_pass.h
-iostream
--
-debuggl.h
--
-map
 -
 
 /v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/render_pass.h

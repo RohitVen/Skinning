@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <glm/gtx/io.hpp>
 #include <glm/gtx/transform.hpp>
+#include <iostream>
 
 /*
  * For debugging purpose.
@@ -40,9 +41,11 @@ void Mesh::loadpmd(const std::string& fn)
 {
 	MMDReader mr;
 	mr.open(fn);
+	numBones = mr.GetNumBones();
 	mr.getMesh(vertices, faces, vertex_normals, uv_coordinates);
 	computeBounds();
 	mr.getMaterial(materials);
+	skeleton.buildBoneStructure(mr, numBones);
 
 	// FIXME: load skeleton and blend weights from PMD file
 	//        also initialize the skeleton as needed

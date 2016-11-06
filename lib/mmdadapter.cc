@@ -92,6 +92,11 @@ public:
 		return true;
 	}
 
+	int GetNumBones()
+	{
+		return model_.GetBoneNum();
+	}
+
 	void getMesh(std::vector<glm::vec4>& V,
 		     std::vector<glm::uvec3>& F,
 		     std::vector<glm::vec4>& N,
@@ -244,6 +249,7 @@ public:
 			//std::cerr << bdef2.GetBoneID(0) << "\t" << bdef2.GetBoneID(1) << "\t" << bdef2.GetBoneWeight() << endl;
 		}
 	}
+
 private:
 	mmd::Model model_;
 	std::unordered_map<int, int> useful_bone_to_pmd_bone_, pmd_bone_to_useful_bone_;
@@ -261,6 +267,11 @@ MMDReader::~MMDReader()
 bool MMDReader::open(const std::string& fn)
 {
 	return d_->open(fn);
+}
+
+int MMDReader::GetNumBones()
+{
+	return d_->GetNumBones();
 }
 
 void MMDReader::getMesh(std::vector<glm::vec4>& V,
@@ -285,3 +296,5 @@ void MMDReader::getJointWeights(std::vector<SparseTuple>& tup)
 {
 	d_->getJointWeights(tup);
 }
+
+

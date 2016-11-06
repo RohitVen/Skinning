@@ -18,6 +18,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/io.hpp>
 #include <debuggl.h>
+#include <iostream>
 
 int window_width = 800, window_height = 600;
 const std::string window_title = "Skinning";

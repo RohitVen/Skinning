@@ -83,7 +83,9 @@ public:
 	 * See SparseTuple for more details
 	 */
 	void getJointWeights(std::vector<SparseTuple>& tup);
-private:
+
+	int GetNumBones(); //Return the number of bones in the model
+public:
 	std::unique_ptr<MMDAdapter> d_;
 };
 
