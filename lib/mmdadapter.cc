@@ -167,7 +167,9 @@ public:
 	bool getJoint(int useful_bone_id, glm::vec3& offset, int& parent)
 	{
 		if (useful_bone_id >= int(useful_bone_to_pmd_bone_.size()) || useful_bone_id < 0)
+		{
 			return false;
+		}
 		int id = useful_bone_to_pmd_bone_[useful_bone_id];
 		const auto& bone = model_.GetBone(id);
 		size_t mmd_parent = bone.GetParentIndex();

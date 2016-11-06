@@ -21,43 +21,29 @@ struct Joint {
 	// FIXME: Implement your Joint data structure.
 	// Note: PMD represents weights on joints, but you need weights on
 	//       bones to calculate the actual animation.
-	Joint(int id, int pid, glm::vec3 off)
+	Joint()
+	{
+		jointID = 0;
+		parentID = 0;
+		jointOffset = glm::vec3(0,0,0);
+	}
+
+	~Joint()
+	{}
+
+	void setValues(int id, int pid, glm::vec3 off)
 	{
 		jointID = id;
 		parentID = pid;
 		jointOffset = off;
 	}
 
-	~Joint()
-	{}
-
-	bool buildJoint(MMDReader &mr, int idVal, glm::vec3& offset, int& parent)
-	{
-		jointID = idVal;
-		if(mr.getJoint(jointID, offset, parent))
-		{
-			std::cout<<"id, parent: "<<jointID<<" "<<parent<<"\n";
-			parentID = parent;
-			jointOffset[0] = offset[0];
-			jointOffset[1] = offset[1];
-			jointOffset[2] = offset[2];
-			return true;
-		}
-		return false;
-	}
-
 
 public:
 	int jointID;
 	int parentID;
-	int numBones;
 	glm::vec3 jointOffset;
 };
-
-// struct LeDoot { //Bone class
-
-// }
-
 
 struct Skeleton {
 	// FIXME: create skeleton and bone data structures
@@ -67,23 +53,26 @@ struct Skeleton {
 	~Skeleton()
 	{}
 
-	void buildBoneStructure(MMDReader &mr, int num)
+	void buildJointStructure(MMDReader &mr)
 	{
 		int id = 0;
 		glm::vec3 offset = {0,0,0};
 		int parent = 0;
-		numBones = num;
-		// joints = new Joint[numBones];
-		while(joints->buildJoint(mr, id, offset, parent))
-		{
+
+		while(mr.getJoint(id, offset, parent))
+		{	
+			Joint * j = new Joint();
+			j->setValues(id, parent, offset);
+			joints[id] = j;
 			id++;
+			if(parent != -1)
+				numJoints++;
 		}
 	}
 
 public:
-	int numBones;
-	int *joint; //Index is joint ID, value is parent ID
-	Joint *joints;
+	int numJoints;
+	std::map<int, Joint *> joints;
 
 
 };
