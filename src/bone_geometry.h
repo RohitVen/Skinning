@@ -59,6 +59,34 @@ public:
 	int jointID;
 	int parentID;
 	glm::vec3 jointOffset;
+	// Joint children[];
+	glm::mat4 coords;
+	glm::mat4 rot;
+	//Create and array of children
+	//Store coords
+};
+
+struct LeDoot { //Bone data struct
+
+	LeDoot()
+	{}
+
+	~LeDoot()
+	{}
+
+	void setValues(int i, int j)
+	{
+		src = i;
+		dest = j;
+	}
+
+public:
+	int src;
+	int dest;
+	//Should only have 2 ints
+
+
+
 };
 
 struct Skeleton {
@@ -88,36 +116,73 @@ struct Skeleton {
 
 	void buildBoneStructure(MMDReader &mr)
 	{
-		// std::cout<<"\nREACHED HERE\n";
 		Joint * j = new Joint();
+		LeDoot b = LeDoot();
+		LeDoot bones[numJoints];
 		std::cout<<"\nNumJoints: "<<numJoints;
-		for(int id = 0; id < numJoints; id++)
+
+		for(int i = 0; i < numJoints; i++)
 		{
-			j = joints.at(id);
+			j = joints.at(i);
 			int curr_id = j->getID();
 			int curr_pid = j->getPID();
-			glm::vec3 curr_off = j->getOffset();
 			if(curr_pid != -1)
 			{
-				Joint* p = joints[curr_pid];
-				int par_id = p->getID();
-				int par_pid = p->getPID();
-				glm::vec3 par_off = p->getOffset();
-				tangent = par_off;
-				tangent = glm::normalize(tangent); //Tangent vector
-
-				glm::vec3 v = findSmallestComp(tangent);
-				double magT = tangent[0]*tangent[0] + tangent[1]*tangent[1] + tangent[2]*tangent[2];
-				magT = sqrt(magT);
-				double magV = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-				magV = sqrt(magV);
-				normal = glm::cross(tangent, v);
-				normal = glm::normalize(normal); //Normal vector
-
-				binormal = glm::cross(tangent, v);
-				binormal = glm::normalize(binormal); //Binormal vector
+				std::cout<<"\nFound valid bone. Adding it "<<i;
+				b.setValues(curr_pid, curr_id);
+				bones[i] = b;
 			}
+			std::cout<<"\nAdded a bone! "<< i;
 		}
+
+
+
+
+		// for(int id = 0; id < numJoints; id++)
+		// {
+		// 	j = joints.at(id);
+		// 	int curr_id = j->getID();
+		// 	int curr_pid = j->getPID();
+		// 	glm::vec3 curr_off = j->getOffset();
+		// 	if(curr_pid != -1)
+		// 	{
+		// 		Joint* p = joints[curr_pid];
+		// 		int par_id = p->getID();
+		// 		int par_pid = p->getPID();
+		// 		glm::vec3 par_off = p->getOffset();
+		// 		tangent = par_off;
+		// 		tangent = glm::normalize(tangent); //Tangent vector
+
+		// 		glm::vec3 v = findSmallestComp(tangent);		
+		// 		normal = glm::cross(tangent, v);
+		// 		double magTV = normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2];
+		// 		magTV = sqrt(magTV);
+		// 		normal = glm::vec3(normal[0]/magTV, normal[1]/magTV, normal[2]/magTV);
+		// 		normal = glm::normalize(normal); //Normal vector
+
+		// 		binormal = glm::cross(tangent, normal);
+		// 		binormal = glm::normalize(binormal); //Binormal vector
+
+		// 		std::cout<<"\n Joint num: "<<id;
+		// 		std::cout<<"\n offset  vec: "<<curr_off[0]<<" "<<curr_off[1]<<" "<<curr_off[2];
+		// 		std::cout<<"\n parent  vec: "<<par_off[0]<<" "<<par_off[1]<<" "<<par_off[2];
+		// 		std::cout<<"\n v       vec: "<<v[0]<<" "<<v[1]<<" "<<v[2];
+		// 		std::cout<<"\n tangent vec: "<<tangent[0]<<" "<<tangent[1]<<" "<<tangent[2];
+		// 		std::cout<<"\n normal  vec: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2];
+		// 		std::cout<<"\n binrmal vec: "<<binormal[0]<<" "<<binormal[1]<<" "<<binormal[2];
+		// 		std::cout<<"\n\n";
+
+		// 		double magP = par_off[0]*par_off[0] + par_off[1]*par_off[1] + par_off[2]*par_off[2];
+		// 		magP = sqrt(magP);
+		// 		glm::vec4 tang = glm::vec4{tangent, 0};
+		// 		glm::vec4 norm = glm::vec4{normal, 0};
+		// 		glm::vec4 bi = glm::vec4{binormal, 0};
+		// 		glm::vec4 temp = glm::vec4{magP,0,0,1};
+		// 		glm::mat4 coords = glm::mat4{tang, norm, bi, temp};
+		// 		glm::mat3 rot{tangent, normal, binormal};
+
+		// 	}
+		// }
 	}
 
 	glm::vec3 findSmallestComp(glm::vec3 &v)
@@ -144,9 +209,10 @@ struct Skeleton {
 public:
 	int numJoints;
 	std::map<int, Joint *> joints;
-	glm::vec3 tangent;
-	glm::vec3 normal;
-	glm::vec3 binormal;
+	LeDoot bones[];
+	glm::vec3 tangent; //x dir
+	glm::vec3 normal; //z dir
+	glm::vec3 binormal; //y dir
 
 };
 
