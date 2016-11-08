@@ -9,6 +9,7 @@
 #include <mmdadapter.h>
 #include <iostream>
 #include <cmath>
+#include <climits>
 
 struct BoundingBox {
 	BoundingBox()
@@ -54,24 +55,30 @@ struct Joint {
 		return jointOffset;
 	}
 
+	void addChild(int j)
+	{
+		children[numChild] = j;
+		numChild++;
+	}
+
 
 public:
 	int jointID;
 	int parentID;
 	glm::vec3 jointOffset;
-	// Joint children[];
+	int numChild = 0;
+	int children[];
 	glm::mat4 coords;
-	glm::mat4 rot;
-	//Create and array of children
-	//Store coords
+	glm::mat3 rot;
+	double length;
 };
 
-struct LeDoot { //Bone data struct
+struct Bone { //Bone data struct
 
-	LeDoot()
+	Bone()
 	{}
 
-	~LeDoot()
+	~Bone()
 	{}
 
 	void setValues(int i, int j)
@@ -83,10 +90,6 @@ struct LeDoot { //Bone data struct
 public:
 	int src;
 	int dest;
-	//Should only have 2 ints
-
-
-
 };
 
 struct Skeleton {
@@ -105,84 +108,92 @@ struct Skeleton {
 		numJoints = 0;
 		while(mr.getJoint(id, offset, parent))
 		{	
-			Joint * j = new Joint();
-			j->setValues(id, parent, offset);
-			joints[id] = j;
+			Joint j = Joint();
+			j.setValues(id, parent, offset);
+			joints.push_back(j);
 			id++;
 			if(parent != -1)
+			{
+				Joint p = joints[parent];
+				p.addChild(id);
 				numJoints++;
+			}
 		}
 	}
 
 	void buildBoneStructure(MMDReader &mr)
 	{
-		Joint * j = new Joint();
-		LeDoot b = LeDoot();
-		LeDoot bones[numJoints];
-		std::cout<<"\nNumJoints: "<<numJoints;
-
+		Joint j = Joint();
+		Bone b = Bone();
+		numBones = 0;
 		for(int i = 0; i < numJoints; i++)
 		{
-			j = joints.at(i);
-			int curr_id = j->getID();
-			int curr_pid = j->getPID();
+			j = joints[i];
+			int curr_id = j.getID();
+			int curr_pid = j.getPID();
 			if(curr_pid != -1)
 			{
-				std::cout<<"\nFound valid bone. Adding it "<<i;
+				// std::cout<<"\nFound valid bone. Adding it "<<i;
+				// std::cout<<"\nsrc and dest: "<<curr_pid<<" "<<curr_id;
 				b.setValues(curr_pid, curr_id);
-				bones[i] = b;
+				// bones[i] = b;
+				bones.push_back(b);
+				numBones++;
 			}
-			std::cout<<"\nAdded a bone! "<< i;
+			// std::cout<<"\nAdded a bone! "<< i;
 		}
+	}
 
+	void jointCoords()
+	{
+		Joint j = Joint();
+		for(int id = 0; id < numJoints; id++)
+		{
+			j = joints[id];
+			int curr_id = j.getID();
+			int curr_pid = j.getPID();
+			glm::vec3 curr_off = j.getOffset();
+			if(curr_pid != -1)
+			{
+				Joint p = joints[curr_pid];
+				int par_id = p.getID();
+				int par_pid = p.getPID();
+				glm::vec3 par_off = p.getOffset();
+				tangent = par_off;
+				tangent = glm::normalize(tangent); //Tangent vector
 
+				glm::vec3 v = findSmallestComp(tangent);		
+				normal = glm::cross(tangent, v);
+				double magTV = normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2];
+				magTV = sqrt(magTV);
+				normal = glm::vec3(normal[0]/magTV, normal[1]/magTV, normal[2]/magTV);
+				normal = glm::normalize(normal); //Normal vector
 
+				binormal = glm::cross(tangent, normal);
+				binormal = glm::normalize(binormal); //Binormal vector
 
-		// for(int id = 0; id < numJoints; id++)
-		// {
-		// 	j = joints.at(id);
-		// 	int curr_id = j->getID();
-		// 	int curr_pid = j->getPID();
-		// 	glm::vec3 curr_off = j->getOffset();
-		// 	if(curr_pid != -1)
-		// 	{
-		// 		Joint* p = joints[curr_pid];
-		// 		int par_id = p->getID();
-		// 		int par_pid = p->getPID();
-		// 		glm::vec3 par_off = p->getOffset();
-		// 		tangent = par_off;
-		// 		tangent = glm::normalize(tangent); //Tangent vector
+				// std::cout<<"\n Joint num: "<<id;
+				// std::cout<<"\n offset  vec: "<<curr_off[0]<<" "<<curr_off[1]<<" "<<curr_off[2];
+				// std::cout<<"\n parent  vec: "<<par_off[0]<<" "<<par_off[1]<<" "<<par_off[2];
+				// std::cout<<"\n v       vec: "<<v[0]<<" "<<v[1]<<" "<<v[2];
+				// std::cout<<"\n tangent vec: "<<tangent[0]<<" "<<tangent[1]<<" "<<tangent[2];
+				// std::cout<<"\n normal  vec: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2];
+				// std::cout<<"\n binrmal vec: "<<binormal[0]<<" "<<binormal[1]<<" "<<binormal[2];
+				// std::cout<<"\n\n";
 
-		// 		glm::vec3 v = findSmallestComp(tangent);		
-		// 		normal = glm::cross(tangent, v);
-		// 		double magTV = normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2];
-		// 		magTV = sqrt(magTV);
-		// 		normal = glm::vec3(normal[0]/magTV, normal[1]/magTV, normal[2]/magTV);
-		// 		normal = glm::normalize(normal); //Normal vector
-
-		// 		binormal = glm::cross(tangent, normal);
-		// 		binormal = glm::normalize(binormal); //Binormal vector
-
-		// 		std::cout<<"\n Joint num: "<<id;
-		// 		std::cout<<"\n offset  vec: "<<curr_off[0]<<" "<<curr_off[1]<<" "<<curr_off[2];
-		// 		std::cout<<"\n parent  vec: "<<par_off[0]<<" "<<par_off[1]<<" "<<par_off[2];
-		// 		std::cout<<"\n v       vec: "<<v[0]<<" "<<v[1]<<" "<<v[2];
-		// 		std::cout<<"\n tangent vec: "<<tangent[0]<<" "<<tangent[1]<<" "<<tangent[2];
-		// 		std::cout<<"\n normal  vec: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2];
-		// 		std::cout<<"\n binrmal vec: "<<binormal[0]<<" "<<binormal[1]<<" "<<binormal[2];
-		// 		std::cout<<"\n\n";
-
-		// 		double magP = par_off[0]*par_off[0] + par_off[1]*par_off[1] + par_off[2]*par_off[2];
-		// 		magP = sqrt(magP);
-		// 		glm::vec4 tang = glm::vec4{tangent, 0};
-		// 		glm::vec4 norm = glm::vec4{normal, 0};
-		// 		glm::vec4 bi = glm::vec4{binormal, 0};
-		// 		glm::vec4 temp = glm::vec4{magP,0,0,1};
-		// 		glm::mat4 coords = glm::mat4{tang, norm, bi, temp};
-		// 		glm::mat3 rot{tangent, normal, binormal};
-
-		// 	}
-		// }
+				double magP = par_off[0]*par_off[0] + par_off[1]*par_off[1] + par_off[2]*par_off[2];
+				magP = sqrt(magP);
+				glm::vec4 tang = glm::vec4{tangent, 0};
+				glm::vec4 norm = glm::vec4{normal, 0};
+				glm::vec4 bi = glm::vec4{binormal, 0};
+				glm::vec4 temp = glm::vec4{magP,0,0,1};
+				glm::mat4 coords = glm::mat4{tang, norm, bi, temp};
+				glm::mat3 rot{tangent, normal, binormal};
+				j.coords = coords;
+				j.rot = rot;
+				j.length = magP;
+			}
+		}
 	}
 
 	glm::vec3 findSmallestComp(glm::vec3 &v)
@@ -208,8 +219,9 @@ struct Skeleton {
 
 public:
 	int numJoints;
-	std::map<int, Joint *> joints;
-	LeDoot bones[];
+	int numBones;
+	std::vector<Joint> joints;
+	std::vector<Bone> bones;
 	glm::vec3 tangent; //x dir
 	glm::vec3 normal; //z dir
 	glm::vec3 binormal; //y dir

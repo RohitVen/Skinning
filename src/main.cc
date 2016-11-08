@@ -102,6 +102,10 @@ int main(int argc, char* argv[])
 	 */
 	gui.assignMesh(&mesh);
 
+	std::vector<glm::vec4> bone_vertices;
+	std::vector<glm::uvec2> bone_faces;
+	create_bones(bone_vertices, bone_faces, mesh); //Get the vertices of the bones!
+
 	glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
 	/*
@@ -192,6 +196,15 @@ int main(int argc, char* argv[])
 	// FIXME: Create the RenderPass objects for bones here.
 	//        Otherwise do whatever you like.
 
+	RenderDataInput bone_pass_input;
+	bone_pass_input.assign(0, "vertex_postion", bone_vertices.data(), bone_vertices.size(), 4, GL_FLOAT);
+	bone_pass_input.assign_index(bone_faces.data(), bone_faces.size(), 2);
+	RenderPass bone_pass(-1, bone_pass_input, 
+		{vertex_shader, nullptr, fragment_shader}, 
+		{std_model, std_view, std_proj, std_light, std_camera, object_alpha}, 
+		{ "fragment_color" }
+		);
+
 	RenderDataInput floor_pass_input;
 	floor_pass_input.assign(0, "vertex_position", floor_vertices.data(), floor_vertices.size(), 4, GL_FLOAT);
 	floor_pass_input.assign_index(floor_faces.data(), floor_faces.size(), 3);
@@ -234,6 +247,12 @@ int main(int argc, char* argv[])
 #endif
 		// FIXME: Draw bones first.
 		// Then draw floor.
+		bone_pass.setup();
+		CHECK_GL_ERROR(glDrawElements(GL_LINES, bone_faces.size() * 3, GL_UNSIGNED_INT, 0));
+
+
+
+
 		if (draw_floor) {
 			floor_pass.setup();
 			// Draw our triangles.
