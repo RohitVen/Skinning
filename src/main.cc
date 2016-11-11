@@ -39,7 +39,30 @@ const char* floor_fragment_shader =
 #include "shaders/floor.frag"
 ;
 
-// FIXME: Add more shaders here.
+// DONE
+const char* bone_vertex_shader =
+R"zzz(
+#version 330 core
+uniform mat4 projection;
+uniform mat4 model;
+uniform mat4 view;
+in vec4 position;
+
+void main()
+{
+	gl_Position = projection * view * model * position;
+}
+)zzz";
+
+const char* bone_fragment_shader =
+R"zzz(#version 330 core
+out vec4 color;
+
+void main()
+{
+	color = vec4(255.0, 204.0, 0.0, 1.0);
+}
+)zzz";
 
 void ErrorCallback(int error, const char* description) {
 	std::cerr << "GLFW Error: " << description << "\n";
@@ -200,9 +223,9 @@ int main(int argc, char* argv[])
 	bone_pass_input.assign(0, "vertex_postion", bone_vertices.data(), bone_vertices.size(), 4, GL_FLOAT);
 	bone_pass_input.assign_index(bone_faces.data(), bone_faces.size(), 2);
 	RenderPass bone_pass(-1, bone_pass_input, 
-		{vertex_shader, nullptr, fragment_shader}, 
-		{std_model, std_view, std_proj, std_light, std_camera, object_alpha}, 
-		{ "fragment_color" }
+		{bone_vertex_shader, nullptr, bone_fragment_shader}, 
+		{std_model, std_view, std_proj}, 
+		{ "color" }
 		);
 
 	RenderDataInput floor_pass_input;
@@ -221,6 +244,7 @@ int main(int argc, char* argv[])
 	bool draw_skeleton = true;
 	bool draw_object = true;
 	bool draw_cylinder = true;
+	bool draw_bone = gui.isTransparent();
 
 	while (!glfwWindowShouldClose(window)) {
 		// Setup some basic window stuff.
@@ -247,10 +271,12 @@ int main(int argc, char* argv[])
 #endif
 		// FIXME: Draw bones first.
 		// Then draw floor.
-		bone_pass.setup();
-		CHECK_GL_ERROR(glDrawElements(GL_LINES, bone_faces.size() * 3, GL_UNSIGNED_INT, 0));
-
-
+		draw_bone = gui.isTransparent();
+		if(draw_bone)
+		{
+			bone_pass.setup();
+			CHECK_GL_ERROR(glDrawElements(GL_LINES, bone_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		}
 
 
 		if (draw_floor) {

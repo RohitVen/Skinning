@@ -47,7 +47,7 @@ void Mesh::loadpmd(const std::string& fn)
 	mr.getMaterial(materials);
 	skeleton.buildJointStructure(mr);
 	skeleton.buildBoneStructure(mr);
-	skeleton.jointCoords();
+	skeleton.appendVertices(0);
 
 	// FIXME: load skeleton and blend weights from PMD file
 	//        also initialize the skeleton as needed

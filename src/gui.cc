@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
+#include <iostream>
 
 namespace {
 	// Intersect a cylinder with radius 1/2, height 1, with base centered at
@@ -49,7 +50,10 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 		return ;
 	}
 	if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
-		//FIXME save out a screenshot using SaveJPEG
+		//DONE
+		GLubyte* pixels = new GLubyte[3 * window_width_* window_height_];
+		glReadPixels(0, 0, window_width_, window_height_, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+		SaveJPEG("jpg1",window_width_, window_height_, pixels);
 	}
 
 	if (captureWASDUPDOWN(key, action))
@@ -110,6 +114,16 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	}
 
 	// FIXME: highlight bones that have been moused over
+	MatrixPointers mats = getMatrixPointers();
+	glm::vec3 ray = glm::vec3(mouse_x, mouse_y, 0);
+	ray = glm::unProject(ray, model_matrix_, projection_matrix_, viewport);
+	ray[0] -= eye_[0];
+	ray[1] -= eye_[1];
+	ray[2] -= eye_[2];
+	// std::cout<<"\nmouse_ray: "<<ray[0]<<" "<<ray[1]<<" "<<ray[2];
+	
+
+
 	current_bone_ = -1;
 }
 

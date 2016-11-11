@@ -55,20 +55,13 @@ struct Joint {
 		return jointOffset;
 	}
 
-	void addChild(int j)
-	{
-		children[numChild] = j;
-		numChild++;
-	}
-
-
 public:
 	int jointID;
 	int parentID;
 	glm::vec3 jointOffset;
-	int numChild = 0;
-	int children[];
-	glm::mat4 coords;
+	glm::vec4 check;
+	std::vector<int> children;
+	glm::mat4 trans;
 	glm::mat3 rot;
 	double length;
 };
@@ -106,18 +99,17 @@ struct Skeleton {
 		glm::vec3 offset = {0,0,0};
 		int parent = 0;
 		numJoints = 0;
+		Joint j = Joint();
 		while(mr.getJoint(id, offset, parent))
 		{	
-			Joint j = Joint();
 			j.setValues(id, parent, offset);
 			joints.push_back(j);
-			id++;
 			if(parent != -1)
 			{
-				Joint p = joints[parent];
-				p.addChild(id);
+				joints[parent].children.push_back(id);
 				numJoints++;
 			}
+			id++;
 		}
 	}
 
@@ -133,65 +125,9 @@ struct Skeleton {
 			int curr_pid = j.getPID();
 			if(curr_pid != -1)
 			{
-				// std::cout<<"\nFound valid bone. Adding it "<<i;
-				// std::cout<<"\nsrc and dest: "<<curr_pid<<" "<<curr_id;
 				b.setValues(curr_pid, curr_id);
-				// bones[i] = b;
 				bones.push_back(b);
 				numBones++;
-			}
-			// std::cout<<"\nAdded a bone! "<< i;
-		}
-	}
-
-	void jointCoords()
-	{
-		Joint j = Joint();
-		for(int id = 0; id < numJoints; id++)
-		{
-			j = joints[id];
-			int curr_id = j.getID();
-			int curr_pid = j.getPID();
-			glm::vec3 curr_off = j.getOffset();
-			if(curr_pid != -1)
-			{
-				Joint p = joints[curr_pid];
-				int par_id = p.getID();
-				int par_pid = p.getPID();
-				glm::vec3 par_off = p.getOffset();
-				tangent = par_off;
-				tangent = glm::normalize(tangent); //Tangent vector
-
-				glm::vec3 v = findSmallestComp(tangent);		
-				normal = glm::cross(tangent, v);
-				double magTV = normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2];
-				magTV = sqrt(magTV);
-				normal = glm::vec3(normal[0]/magTV, normal[1]/magTV, normal[2]/magTV);
-				normal = glm::normalize(normal); //Normal vector
-
-				binormal = glm::cross(tangent, normal);
-				binormal = glm::normalize(binormal); //Binormal vector
-
-				// std::cout<<"\n Joint num: "<<id;
-				// std::cout<<"\n offset  vec: "<<curr_off[0]<<" "<<curr_off[1]<<" "<<curr_off[2];
-				// std::cout<<"\n parent  vec: "<<par_off[0]<<" "<<par_off[1]<<" "<<par_off[2];
-				// std::cout<<"\n v       vec: "<<v[0]<<" "<<v[1]<<" "<<v[2];
-				// std::cout<<"\n tangent vec: "<<tangent[0]<<" "<<tangent[1]<<" "<<tangent[2];
-				// std::cout<<"\n normal  vec: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2];
-				// std::cout<<"\n binrmal vec: "<<binormal[0]<<" "<<binormal[1]<<" "<<binormal[2];
-				// std::cout<<"\n\n";
-
-				double magP = par_off[0]*par_off[0] + par_off[1]*par_off[1] + par_off[2]*par_off[2];
-				magP = sqrt(magP);
-				glm::vec4 tang = glm::vec4{tangent, 0};
-				glm::vec4 norm = glm::vec4{normal, 0};
-				glm::vec4 bi = glm::vec4{binormal, 0};
-				glm::vec4 temp = glm::vec4{magP,0,0,1};
-				glm::mat4 coords = glm::mat4{tang, norm, bi, temp};
-				glm::mat3 rot{tangent, normal, binormal};
-				j.coords = coords;
-				j.rot = rot;
-				j.length = magP;
 			}
 		}
 	}
@@ -217,14 +153,64 @@ struct Skeleton {
 		}
 	}
 
+	void appendVertices(int s)
+	{
+
+		Joint j = joints[s];
+		int par = j.parentID;
+
+		if(j.children.size() <= 0 || s == numJoints - 1)
+		{
+			return;
+		}
+
+		if(s < numJoints && j.children.size() > 0)
+		{
+			for(int k = 0; k < j.children.size(); k++)
+			{
+				joints[j.children[k]].jointOffset.x += j.jointOffset.x;
+				joints[j.children[k]].jointOffset.y += j.jointOffset.y;
+				joints[j.children[k]].jointOffset.z += j.jointOffset.z;
+			}
+			// std::cout<<"\nnumchild should be 0. So I'm here!";
+			glm::vec3 par_off = joints[j.getPID()].getOffset();
+			tangent = par_off;
+			tangent = glm::normalize(tangent); //Tangent vector
+
+			glm::vec3 v = findSmallestComp(tangent);		
+			normal = glm::cross(tangent, v);
+			double magTV = normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2];
+			magTV = sqrt(magTV);
+			normal = glm::vec3(normal[0]/magTV, normal[1]/magTV, normal[2]/magTV);
+			normal = glm::normalize(normal); //Normal vector
+
+
+			binormal = glm::cross(tangent, normal);
+			binormal = glm::normalize(binormal); //Binormal vector
+
+			double magP = par_off[0]*par_off[0] + par_off[1]*par_off[1] + par_off[2]*par_off[2];
+			magP = sqrt(magP);
+
+			glm::mat4 trans = glm::mat4{glm::vec4{0,0,0,0}, glm::vec4{0,0,0,0}, glm::vec4{0,0,0,0}, glm::vec4{j.jointOffset, 0}};
+			glm::mat3 rot{normal, tangent, binormal};
+			j.trans = trans;
+			j.rot = rot;
+			j.length = magP;
+			std::cout<<"\ntangent: "<<tangent[0]<<" "<<tangent[1]<<" "<<tangent[2];
+			std::cout<<"\nnormal : "<<normal[0]<<" "<<normal[1]<<" "<<normal[2];
+			std::cout<<"\nbinrmal: "<<binormal[0]<<" "<<binormal[1]<<" "<<binormal[2];
+			appendVertices(s+1);
+		}		
+	}
+
 public:
 	int numJoints;
 	int numBones;
 	std::vector<Joint> joints;
 	std::vector<Bone> bones;
 	glm::vec3 tangent; //x dir
-	glm::vec3 normal; //z dir
-	glm::vec3 binormal; //y dir
+	glm::vec3 normal; //y dir
+	glm::vec3 binormal; //z dir
 
 };
 

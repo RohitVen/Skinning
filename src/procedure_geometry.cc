@@ -19,21 +19,29 @@ void create_bones(std::vector<glm::vec4>& bone_vertices, std::vector<glm::uvec2>
 	int dest;
 	Bone b;
 	Joint j;
-	// std::cout<<"\nnumJoints: "<<m.skeleton.numJoints;
 	for(int i = 0; i < m.skeleton.numBones; i++)
 	{
 		b = m.skeleton.bones[i];
-		j = m.skeleton.joints[i];
-		// std::cout<<"\nJoint ID: "<<j->getID();
 		src = b.src;
 		dest = b.dest;
 		j = m.skeleton.joints[src];
-		std::cout<<"\nparent off: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
+
 		bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
+		// std::cout<<"\nsrc: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
+		// std::cout<<"\nsrc check: "<<j.check[0]<<" "<<j.check[1]<<" "<<j.check[2];
+		// std::cout<<"\n";
 		j = m.skeleton.joints[dest];
-		std::cout<<"\nchild off: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
 		bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
-		bone_faces.push_back(glm::uvec2(0,1));
+		// std::cout<<"\ndest: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
+		// std::cout<<"\ndest check: "<<j.check[0]<<" "<<j.check[1]<<" "<<j.check[2];
+		// std::cout<<"\n\n";
+
+
+	}
+
+	for(int i = 0; i < 2*m.skeleton.numBones; i = i+2)
+	{
+		bone_faces.push_back(glm::uvec2(i,i+1));
 	}
 }
 
