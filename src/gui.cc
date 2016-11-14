@@ -7,16 +7,62 @@
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
-#include <iostream>
+#include <cmath>
+
 
 namespace {
 	// Intersect a cylinder with radius 1/2, height 1, with base centered at
 	// (0, 0, 0) and up direction (0, 1, 0).
 	bool IntersectCylinder(const glm::vec3& origin, const glm::vec3& direction,
-			float radius, float height, float* t)
+			float radius, float height, std::vector<float> t, glm::vec3 center)
 	{
 		//FIXME perform proper ray-cylinder collision detection
-		return true;
+
+		// std::cout<<"\nCenter: "<<center.x<<" "<<center.y<<" "<<center.z;
+		double a = pow(direction.x - origin.x,2) + pow(direction.z - origin.z,2);
+		double b = 2*(direction.x - origin.x)*(origin.x - center.x) + 2*(direction.z - origin.z)*(origin.z - center.z);
+		double c = pow(origin.x - center.x,2) + pow(origin.z - center.z,2) - pow(radius,2);
+		double discrim = pow(b,2) - 4*a*c;
+		if(discrim < 0)
+		{
+			// std::cout<<"\nDiscrim is nan!!";
+			return false;
+		}
+		// std::cout<<"\na, b, c: "<<a<<" "<<b<<" "<<c;
+		// std::cout<<"\ndiscrim: "<<discrim;
+		discrim = sqrt(discrim);
+		float t1 = (-1*b + discrim)/(2*a);
+		float t2 = (-1*b - discrim)/(2*a);
+		t.push_back(t1);
+		t.push_back(t2);
+		// std::cout<<"\nt-values: "<<t[0]<<" "<<t[1];
+		// if(t[0] > 0 && t[0] < 1)
+		// {
+		// 	// std::cout<<"\nt-values: "<<t[0];
+		// 	return true;
+		// }
+		// if(t[1] > 0 && t[1] < 1)
+		// {
+		// 	// std::cout<<"\nt-values: "<<t[1];
+		// 	return true;
+		// }
+		glm::vec3 check1 = glm::vec3(origin + (t1*direction));
+		std::cout<<"\ncheck1: "<<check1.x<<" "<<check1.y<<" "<<check1.z;
+		glm::vec3 check2 = glm::vec3(origin + (t2*direction));
+		std::cout<<"\ncheck2: "<<check2.x<<" "<<check2.y<<" "<<check2.z;
+		std::cout<<"\n\n";
+
+		if(check1.y > 0 && check1.y < height)
+		{
+			return true;
+		}
+		if(check2.y > 0 && check2.y < height)
+		{
+			return true;
+		}
+		// std::cout<<"\nt0 and t1: "<<t[0]<<" "<<t[1];
+
+		return false;
 	}
 }
 
@@ -114,18 +160,39 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	}
 
 	// FIXME: highlight bones that have been moused over
-	MatrixPointers mats = getMatrixPointers();
-	glm::vec3 ray = glm::vec3(mouse_x, mouse_y, 0);
-	ray = glm::unProject(ray, model_matrix_, projection_matrix_, viewport);
-	ray[0] -= eye_[0];
-	ray[1] -= eye_[1];
-	ray[2] -= eye_[2];
-	// std::cout<<"\nmouse_ray: "<<ray[0]<<" "<<ray[1]<<" "<<ray[2];
-	
+	glm::vec3 p = glm::vec3(mouse_x, mouse_y, 0);
+	p = glm::unProject(p, model_matrix_, projection_matrix_, viewport);
+	glm::vec3 q = glm::vec3(mouse_x, mouse_y, 1);
+	q = glm::unProject(q, model_matrix_, projection_matrix_, viewport);
+	glm::vec3 ray = p - q;
+	glm::vec4 t_origin;
+	glm::vec4 t_ray;
+
+for(int i = 0; i < mesh_->skeleton.numJoints; i++)
+	{
+		Joint j = mesh_->skeleton.joints[i];
+		t_origin = j.rot * glm::vec4(p,1);
+		t_ray = j.rot * glm::vec4(ray,0);
+		glm::vec3 origin = glm::vec3(t_origin.x, t_origin.y, t_origin.z);
+		glm::vec3 direction = glm::vec3(t_ray.x, t_ray.y, t_ray.z);
+
+		// std::cout<<"\norigin   : "<<origin.x<<" "<<origin.y<<" "<<origin.z;
+		// std::cout<<"\ndirection: "<<direction.x<<" "<<direction.y<<" "<<direction.z;
+		// std::cout<<"\n\n";
+		std::vector<float> t;
+		float len = (float) j.length;
+		int collision = IntersectCylinder(origin, direction, kCylinderRadius, len, t, j.check);
+		if(collision == 1)
+		{
+			std::cout<<"\nHIT A BONE!!!: "<<i;
+			break;
+		}
+	}
 
 
 	current_bone_ = -1;
 }
+
 
 void GUI::mouseButtonCallback(int button, int action, int mods)
 {

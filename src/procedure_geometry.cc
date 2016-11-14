@@ -19,23 +19,28 @@ void create_bones(std::vector<glm::vec4>& bone_vertices, std::vector<glm::uvec2>
 	int dest;
 	Bone b;
 	Joint j;
+	// std::cout<<"\nNumBones: "<<m.skeleton.numBones;
 	for(int i = 0; i < m.skeleton.numBones; i++)
 	{
 		b = m.skeleton.bones[i];
 		src = b.src;
 		dest = b.dest;
+		// std::cout<<"\nSrc and dest: "<<src<<" "<<dest;
 		j = m.skeleton.joints[src];
 
-		bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
+		// bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
+		bone_vertices.push_back(glm::vec4(j.check,1.0f));
+
 		// std::cout<<"\nsrc: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
 		// std::cout<<"\nsrc check: "<<j.check[0]<<" "<<j.check[1]<<" "<<j.check[2];
 		// std::cout<<"\n";
 		j = m.skeleton.joints[dest];
-		bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
+		// bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
+		bone_vertices.push_back(glm::vec4(j.check,1.0f));
+
 		// std::cout<<"\ndest: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
 		// std::cout<<"\ndest check: "<<j.check[0]<<" "<<j.check[1]<<" "<<j.check[2];
 		// std::cout<<"\n\n";
-
 
 	}
 
