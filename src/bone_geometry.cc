@@ -41,13 +41,13 @@ void Mesh::loadpmd(const std::string& fn)
 {
 	MMDReader mr;
 	mr.open(fn);
-	numBones = mr.GetNumBones();
 	mr.getMesh(vertices, faces, vertex_normals, uv_coordinates);
 	computeBounds();
 	mr.getMaterial(materials);
 	skeleton.buildJointStructure(mr);
 	skeleton.buildBoneStructure(mr);
 	skeleton.appendVertices(0);
+	numBones = getNumberOfBones();
 
 	// FIXME: load skeleton and blend weights from PMD file
 	//        also initialize the skeleton as needed

@@ -20,7 +20,7 @@ void create_bones(std::vector<glm::vec4>& bone_vertices, std::vector<glm::uvec2>
 	Bone b;
 	Joint j;
 	// std::cout<<"\nNumBones: "<<m.skeleton.numBones;
-	for(int i = 0; i < m.skeleton.numBones; i++)
+	for(int i = 0; i < m.skeleton.bones.size(); i++)
 	{
 		b = m.skeleton.bones[i];
 		src = b.src;
@@ -44,7 +44,7 @@ void create_bones(std::vector<glm::vec4>& bone_vertices, std::vector<glm::uvec2>
 
 	}
 
-	for(int i = 0; i < 2*m.skeleton.numBones; i = i+2)
+	for(int i = 0; i < 2*m.skeleton.bones.size(); i = i+2)
 	{
 		bone_faces.push_back(glm::uvec2(i,i+1));
 	}

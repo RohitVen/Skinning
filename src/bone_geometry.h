@@ -65,6 +65,7 @@ public:
 	glm::mat4 trans;
 	glm::mat3 basis;
 	glm::mat4 rot;
+	glm::mat4 coords;
 	double length;
 };
 
@@ -109,10 +110,11 @@ struct Skeleton {
 			if(parent != -1)
 			{
 				joints[parent].children.push_back(id);
-				numJoints++;
 			}
+			numJoints++;
 			id++;
 		}
+		joints.push_back(j);
 	}
 
 	void buildBoneStructure(MMDReader &mr)
@@ -120,7 +122,7 @@ struct Skeleton {
 		Joint j = Joint();
 		Bone b = Bone();
 		numBones = 0;
-		for(int i = 0; i < numJoints; i++)
+		for(int i = 0; i < joints.size(); i++)
 		{
 			j = joints[i];
 			int curr_id = j.getID();
@@ -161,17 +163,17 @@ struct Skeleton {
 		Joint j = joints[s];
 		int par = joints[s].parentID;
 
-		if(s >= numJoints)
+		if(s >= joints.size())
 		{
 			//Base case
 			return;
 		}
 
-		if(s < numJoints)
+		if(s < joints.size())
 		{
 			double magP = joints[s].check[0]*joints[s].check[0] + joints[s].check[1]*joints[s].check[1] + joints[s].check[2]*joints[s].check[2];
 			magP = sqrt(magP);
-			joints[s].length = magP;
+			joints[s].length = magP; //Length of joint
 
 			for(int k = 0; k < j.children.size(); k++)
 			{
@@ -182,68 +184,62 @@ struct Skeleton {
 			}
 			if(s != 0)
 			{
+				// std::cout<<"\npoffst: "<<joints[par].jointOffset.x<<" "<<joints[par].jointOffset.y<<" "<<joints[par].jointOffset.z;
+				// std::cout<<"\noffset: "<<joints[s].check.x<<" "<<joints[s].check.y<<" "<<joints[s].check.z;
+
 				//Finding Transform Matrix
-				joints[s].trans = glm::mat4{glm::vec4{1,0,0,0}, glm::vec4{0,1,0,0}, glm::vec4{0,0,1,0}, glm::vec4{joints[s].check, 1}};
-				joints[s].trans = glm::transpose(joints[s].trans);
-				
-				int p = joints[s].getPID();
-				joints[s].trans = joints[p].trans * joints[s].trans;
+				glm::mat4 coords = joints[par].coords;
+				glm::vec4 trans_coords = glm::inverse(coords) * glm::vec4(joints[s].check,1);
+				trans_coords[3] = 1;
 
-				glm::vec4 t = joints[s].trans * glm::vec4(joints[s].check,1);
-				// std::cout<<"\nt    : "<<t.x<<" "<<t.y<<" "<<t.z;
-				joints[s].check = glm::vec3(joints[s].trans[0][3],joints[s].trans[1][3],joints[s].trans[2][3]);
-				// std::cout<<"\ncheck: "<<joints[s].check.x<<" "<<joints[s].check.y<<" "<<joints[s].check.z<<"\n\n";
+				joints[s].trans = glm::mat4(glm::vec4(1,0,0,0), glm::vec4(0,1,0,0), glm::vec4(0,0,1,0), trans_coords); //Translation Matrix
 
+				glm::vec4 start = coords * joints[s].trans * glm::vec4(0,0,0,1); //FINAL START COORDS
+
+				glm::mat4 accum = joints[par].coords * joints[s].trans;
+				glm::vec4 rot_coords = glm::inverse(accum) * glm::vec4(joints[s].check + joints[par].check, 1);
+				rot_coords[3] = 1;
 
 				//Finding Rotation Matrix
 				glm::vec3 par_off = joints[par].getOffset();
-				tangent = par_off;
-				tangent = glm::normalize(tangent); //Tangent vector
+				tangent = glm::vec3(rot_coords[0]/magP, rot_coords[1]/magP, rot_coords[2]/magP); //Tangent vector
 
 				glm::vec3 v = findSmallestComp(tangent);		
 				normal = glm::cross(tangent, v);
 				double magTV = normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2];
 				magTV = sqrt(magTV);
 
-				normal = glm::vec3(normal[0]/magTV, normal[1]/magTV, normal[2]/magTV);
-				normal = glm::normalize(normal); //Normal vector
+				normal = glm::vec3(normal[0]/magTV, normal[1]/magTV, normal[2]/magTV); //Normal vector
 
-				binormal = glm::cross(tangent, normal);
-				binormal = glm::normalize(binormal); //Binormal vector
+				binormal = glm::cross(tangent, normal); //Binormal vector
 
-				glm::vec4 norm = glm::vec4(normal, -1*glm::dot(normal, joints[s].check));
-				glm::vec4 tang = glm::vec4(tangent, -1*glm::dot(tangent, joints[s].check));
-				glm::vec4 bi = glm::vec4(binormal, -1*glm::dot(binormal, joints[s].check));
-				std::cout<<"\nnorm: "<<norm.x<<" "<<norm.y<<" "<<norm.z;
-				std::cout<<"\ntang: "<<tang.x<<" "<<tang.y<<" "<<tang.z;
-				std::cout<<"\nbi  : "<<bi.x<<" "<<bi.y<<" "<<bi.z;
+				glm::mat4 rot{glm::vec4(normal,0), glm::vec4(binormal,0), glm::vec4(tangent,0), glm::vec4(0,0,0,1)};
+				joints[s].rot = rot; //Rotation Matrix
 
-				glm::mat4 rot{bi, norm, tang, glm::vec4{0,0,0,1}};
-				joints[s].rot = rot;
-				std::cout<<"\n\nrot\n";
-				for(int i = 0; i < 4; i++)
-				{
-					for(int j = 0; j < 4; j++)
-					{
-						std::cout<<joints[s].rot[i][j]<<" ";
-					}
-					std::cout<<"\n";
-				}
-				std::cout<<"\n\n";
+				joints[s].coords = joints[s].trans * joints[s].rot;
 
-				//Basis Matrix
-				glm::mat3 basis = glm::mat3{binormal, normal, tangent};
-				joints[s].basis = basis;
+				glm::vec4 end = accum * joints[s].rot * glm::vec4(0,0,magP,1); //FINAL END COORDS
 
-				// std::cout<<"\ntangent: "<<tangent[0]<<" "<<tangent[1]<<" "<<tangent[2];
-				// std::cout<<"\nnormal : "<<normal[0]<<" "<<normal[1]<<" "<<normal[2];
-				// std::cout<<"\nbinrmal: "<<binormal[0]<<" "<<binormal[1]<<" "<<binormal[2];
+				// std::cout<<"\nstart : "<<start.x<<" "<<start.y<<" "<<start.z;
+				// std::cout<<"\nfinal : "<<joints[s].jointOffset.x<<" "<<joints[s].jointOffset.y<<" "<<joints[s].jointOffset.z;
+				// std::cout<<"\n\n";
+				joints[s].check = glm::vec3(end);
+
 			} 
 			else
 			{
 				//Root joint
-				joints[s].trans = glm::mat4{glm::vec4{1,0,0,0}, glm::vec4{0,1,0,0}, glm::vec4{0,0,1,0}, glm::vec4{j.check, 1}};
-				joints[s].trans = glm::transpose(joints[s].trans);
+				joints[s].trans = glm::mat4{glm::vec4{1,0,0,0}, glm::vec4{0,1,0,0}, glm::vec4{0,0,1,0}, glm::vec4{j.jointOffset, 1}}; //Translation Matrix
+
+				glm::mat4 rot{glm::vec4{1,0,0,0}, glm::vec4{0,1,0,0}, glm::vec4{0,0,1,0}, glm::vec4{0,0,0,1}};
+				joints[s].rot = rot; //Rotation Matrix
+
+				glm::mat4 coords = joints[s].trans * joints[s].rot;
+				joints[s].coords = coords; //Coords Matrix
+
+				//Basis Matrix
+				glm::mat3 basis = glm::mat3{binormal, normal, tangent};
+				joints[s].basis = basis;
 			}
 			appendVertices(s+1);
 		}		
@@ -277,7 +273,7 @@ struct Mesh {
 	void updateAnimation();
 	int getNumberOfBones() const 
 	{ 
-		return numBones;
+		return skeleton.bones.size();
 	}
 	glm::vec3 getCenter() const { return 0.5f * glm::vec3(bounds.min + bounds.max); }
 private:

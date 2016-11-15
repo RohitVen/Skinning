@@ -19,9 +19,9 @@ namespace {
 		//FIXME perform proper ray-cylinder collision detection
 
 		// std::cout<<"\nCenter: "<<center.x<<" "<<center.y<<" "<<center.z;
-		double a = pow(direction.x - origin.x,2) + pow(direction.z - origin.z,2);
-		double b = 2*(direction.x - origin.x)*(origin.x - center.x) + 2*(direction.z - origin.z)*(origin.z - center.z);
-		double c = pow(origin.x - center.x,2) + pow(origin.z - center.z,2) - pow(radius,2);
+		double a = pow(direction.x - origin.x,2) + pow(direction.y - origin.y,2);
+		double b = 2*(direction.x - origin.x)*(origin.x - center.x) + 2*(direction.y - origin.y)*(origin.y - center.y);
+		double c = pow(origin.x - center.x,2) + pow(origin.y - center.y,2) - pow(radius,2);
 		double discrim = pow(b,2) - 4*a*c;
 		if(discrim < 0)
 		{
@@ -36,27 +36,27 @@ namespace {
 		t.push_back(t1);
 		t.push_back(t2);
 		// std::cout<<"\nt-values: "<<t[0]<<" "<<t[1];
-		// if(t[0] > 0 && t[0] < 1)
-		// {
-		// 	// std::cout<<"\nt-values: "<<t[0];
-		// 	return true;
-		// }
-		// if(t[1] > 0 && t[1] < 1)
-		// {
-		// 	// std::cout<<"\nt-values: "<<t[1];
-		// 	return true;
-		// }
+		if(t[0] < 0 && t[1] < 0)
+		{
+			// std::cout<<"\nt-values: "<<t[0];
+			return false;
+		}
+		if(t[0] > 1 && t[1] > 1)
+		{
+			// std::cout<<"\nt-values: "<<t[1];
+			return false;
+		}
 		glm::vec3 check1 = glm::vec3(origin + (t1*direction));
-		std::cout<<"\ncheck1: "<<check1.x<<" "<<check1.y<<" "<<check1.z;
+		// std::cout<<"\ncheck1: "<<check1.x<<" "<<check1.y<<" "<<check1.z;
 		glm::vec3 check2 = glm::vec3(origin + (t2*direction));
-		std::cout<<"\ncheck2: "<<check2.x<<" "<<check2.y<<" "<<check2.z;
-		std::cout<<"\n\n";
+		// std::cout<<"\ncheck2: "<<check2.x<<" "<<check2.y<<" "<<check2.z;
+		// std::cout<<"\n\n";
 
-		if(check1.y > 0 && check1.y < height)
+		if(check1.z > 0 && check1.z < height)
 		{
 			return true;
 		}
-		if(check2.y > 0 && check2.y < height)
+		if(check2.z > 0 && check2.z < height)
 		{
 			return true;
 		}
@@ -168,13 +168,16 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	glm::vec4 t_origin;
 	glm::vec4 t_ray;
 
-for(int i = 0; i < mesh_->skeleton.numJoints; i++)
+for(int i = 0; i < mesh_->skeleton.joints.size(); i++)
 	{
 		Joint j = mesh_->skeleton.joints[i];
-		t_origin = j.rot * glm::vec4(p,1);
-		t_ray = j.rot * glm::vec4(ray,0);
+		t_origin = glm::inverse(j.rot) * glm::vec4(p,1);
+		t_ray = glm::inverse(j.rot) * glm::vec4(ray,0);
 		glm::vec3 origin = glm::vec3(t_origin.x, t_origin.y, t_origin.z);
 		glm::vec3 direction = glm::vec3(t_ray.x, t_ray.y, t_ray.z);
+
+		origin = glm::normalize(origin);
+		direction = glm::normalize(direction);
 
 		// std::cout<<"\norigin   : "<<origin.x<<" "<<origin.y<<" "<<origin.z;
 		// std::cout<<"\ndirection: "<<direction.x<<" "<<direction.y<<" "<<direction.z;
@@ -182,11 +185,11 @@ for(int i = 0; i < mesh_->skeleton.numJoints; i++)
 		std::vector<float> t;
 		float len = (float) j.length;
 		int collision = IntersectCylinder(origin, direction, kCylinderRadius, len, t, j.check);
-		if(collision == 1)
-		{
-			std::cout<<"\nHIT A BONE!!!: "<<i;
-			break;
-		}
+		// if(collision == 1)
+		// {
+		// 	std::cout<<"\nHIT A BONE!!!: "<<i;
+		// 	break;
+		// }
 	}
 
 

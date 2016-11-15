@@ -76,6 +76,24 @@ GL/glext.h
 GL/glu.h
 -
 
+/v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/bone_geometry.cc
+config.h
+/v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/config.h
+bone_geometry.h
+/v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/bone_geometry.h
+fstream
+-
+iostream
+-
+stdexcept
+-
+glm/gtx/io.hpp
+-
+glm/gtx/transform.hpp
+-
+iostream
+-
+
 /v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/bone_geometry.h
 ostream
 -
@@ -173,6 +191,16 @@ shaders/default.frag
 /v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/shaders/default.frag
 shaders/floor.frag
 /v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/shaders/floor.frag
+
+/v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/procedure_geometry.cc
+procedure_geometry.h
+/v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/procedure_geometry.h
+bone_geometry.h
+/v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/bone_geometry.h
+config.h
+/v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/config.h
+iostream
+-
 
 /v/filer4b/v38q001/rohitven/Desktop/CS354/A3/skinning/src/procedure_geometry.h
 vector
