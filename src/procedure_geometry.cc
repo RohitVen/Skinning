@@ -20,24 +20,11 @@ void create_bones(std::vector<glm::vec4>& bone_vertices, std::vector<glm::uvec2>
 	int dest;
 	Bone b;
 	Joint j;
-	// std::cout<<"\nNumBones: "<<m.skeleton.numBones;
 	for(int i = 0; i < m.skeleton.bones.size(); i++)
 	{
 		b = m.skeleton.bones[i];
-		// std::cout<<"\nSrc and dest: "<<src<<" "<<dest;
-
-		// bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
 		bone_vertices.push_back(glm::vec4(b.start,1));
-
-		// std::cout<<"\nsrc: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
-		// std::cout<<"\nsrc check: "<<j.check[0]<<" "<<j.check[1]<<" "<<j.check[2];
-		// std::cout<<"\n";
-		// bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
 		bone_vertices.push_back(glm::vec4(b.end,1));
-
-		// std::cout<<"\ndest: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
-		// std::cout<<"\ndest check: "<<j.check[0]<<" "<<j.check[1]<<" "<<j.check[2];
-		// std::cout<<"\n\n";
 
 	}
 

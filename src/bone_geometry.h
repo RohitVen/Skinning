@@ -193,8 +193,6 @@ struct Skeleton {
 			}
 			if(s != 0)
 			{
-				// std::cout<<"\npoffst: "<<joints[par].jointOffset.x<<" "<<joints[par].jointOffset.y<<" "<<joints[par].jointOffset.z;
-				// std::cout<<"\noffset: "<<joints[s].check.x<<" "<<joints[s].check.y<<" "<<joints[s].check.z;
 
 				//Finding Transform Matrix
 				bones[s-1].length = magP;
@@ -214,14 +212,6 @@ struct Skeleton {
 				rot_coords[3] = 1;
 
 				//Finding Rotation Matrix
-				// glm::vec3 par_off = joints[par].getOffset();
-				glm::mat4 iden = glm::mat4(1);
-				iden[3][3] = 0;
-				glm::mat4 temp = joints[par].rot * iden;
-
-				glm::vec4 tang = glm::transpose(temp) * glm::vec4(joints[s].check, 0); 
-				tang[3] = 1;
-				// glm::vec3 tangent = glm::vec3(tang);
 				glm::vec3 tangent = glm::vec3(rot_coords);
 				tangent = glm::normalize(tangent); //Tangent vector
 
@@ -231,22 +221,14 @@ struct Skeleton {
 
 
 				binormal = glm::cross(tangent, normal); //Binormal vector
-				// binormal = glm::normalize(binormal);
 
 				glm::mat4 rot{glm::vec4(tangent,0), glm::vec4(binormal,0), glm::vec4(normal,0), glm::vec4(0,0,0,1)};
 				joints[s].rot = rot; //Rotation Matrix
-
-				// joints[s].total_rot = joints[par].total_rot * rot;
-
-				// joints[s].orientation = glm::inverse(joints[s].rot);
 
 				joints[s].coords = accum * joints[s].rot;
 
 				glm::vec4 end = accum * joints[s].rot * glm::vec4(magP,0,0,1); //FINAL END COORDS
 
-				// std::cout<<"\nstart : "<<start.x<<" "<<start.y<<" "<<start.z;
-				// std::cout<<"\nfinal : "<<joints[s].jointOffset.x<<" "<<joints[s].jointOffset.y<<" "<<joints[s].jointOffset.z;
-				// std::cout<<"\n\n";
 				joints[s].end = glm::vec3(end);
 
 				bones[s-1].start = glm::vec3(start);
@@ -254,157 +236,6 @@ struct Skeleton {
 				bones[s-1].trans = joints[s].trans;
 				bones[s-1].rot = joints[s].rot;
 				bones[s-1].coords = joints[s].coords;
-
-				//ERROR CHECKING
-				if(s==3)
-				{
-				// 	std::cout<<"\nsrc and dest: "<<par<<" "<<s;
-					std::cout<<"\nbone start  : "<<bones[par-1].start.x<<" "<<bones[par-1].start.y<<" "<<bones[par-1].start.z;
-					std::cout<<"\nbone end    : "<<bones[s-1].end.x<<" "<<bones[s-1].end.y<<" "<<bones[s-1].end.z;
-				// std::cout<<"\ncurrent joint and its parent: "<<s<<" "<<par;
-					std::cout<<"\npar_offset  : "<<joints[par].jointOffset.x<<" "<<joints[par].jointOffset.y<<" "<<joints[par].jointOffset.z;
-				// 	// std::cout<<"\nOriginal off: "<<joints[s].org.x<<" "<<joints[s].org.y<<" "<<joints[s].org.z;
-					std::cout<<"\nchild_offset: "<<joints[s].jointOffset.x<<" "<<joints[s].jointOffset.y<<" "<<joints[s].jointOffset.z;
-					std::cout<<"\npar_org_off : "<<joints[par].check.x<<" "<<joints[par].check.y<<" "<<joints[par].check.z;
-					std::cout<<"\nchld_org_of : "<<joints[s].check.x<<" "<<joints[s].check.y<<" "<<joints[s].check.z;
-					std::cout<<"\nTang        : "<<tang.x<<" "<<tang.y<<" "<<tang.z;
-
-				// 	// std::cout<<"\nMagT: "<<magT;
-				// 	std::cout<<"\nStart vector: "<<start.x<<" "<<start.y<<" "<<start.z;
-				// 	std::cout<<"\nEnd vector  : "<<end.x<<" "<<end.y<<" "<<end.z;
-				// 	std::cout<<"\nTrans coords: "<<trans_coords.x<<" "<<trans_coords.y<<" "<<trans_coords.z;
-					std::cout<<"\nRot coords  : "<<rot_coords.x<<" "<<rot_coords.y<<" "<<rot_coords.z;
-					std::cout<<"\nAns         : "<<ans.x<<" "<<ans.y<<" "<<ans.z;
-					std::cout<<"\njoints[s].ck: "<<joints[s].check.x<<" "<<joints[s].check.y<<" "<<joints[s].check.z;
-
-				// 	std::cout<<"\nv vector    : "<<v.x<<" "<<v.y<<" "<<v.z;
-					std::cout<<"\nNormal vectr: "<<normal.x<<" "<<normal.y<<" "<<normal.z;
-					std::cout<<"\nBinormal    : "<<binormal.x<<" "<<binormal.y<<" "<<binormal.z;
-					std::cout<<"\nTangent     : "<<tangent.x<<" "<<tangent.y<<" "<<tangent.z;
-					std::cout<<"\npar bone s and d: "<<bones[par-1].src<<" "<<bones[par-1].dest;
-					// std::cout<<"\ns: "<<st.x<<" "<<st.y<<" "<<st.z;
-					// std::cout<<"\ne: "<<en.x<<" "<<en.y<<" "<<en.z;
-
-					std::cout<<"\n\nParent bone coords\n";
-					for(int i=0;i<4;i++)
-					{
-						for(int j=0;j<4;j++)
-						{
-							std::cout<<joints[par].coords[i][j]<<" ";
-						}
-						std::cout<<"\n";
-					}
-					std::cout<<"\n\nParent bone trans\n";
-					for(int i=0;i<4;i++)
-					{
-						for(int j=0;j<4;j++)
-						{
-							std::cout<<joints[par].trans[i][j]<<" ";
-						}
-						std::cout<<"\n";
-					}
-					std::cout<<"\n\nParent bone rot\n";
-					for(int i=0;i<4;i++)
-					{
-						for(int j=0;j<4;j++)
-						{
-							std::cout<<joints[par].rot[i][j]<<" ";
-						}
-						std::cout<<"\n";
-					}
-
-
-					// std::cout<<"\nans         : "<<ans.x<<" "<<ans.y<<" "<<ans.z<<"\n";
-					std::cout<<"\n\nTrans\n";
-					for(int i=0;i<4;i++)
-					{
-						for(int j=0;j<4;j++)
-						{
-							std::cout<<joints[s].trans[i][j]<<" ";
-						}
-						std::cout<<"\n";
-					}
-
-					// std::cout<<"\nPar Trans\n";
-					// for(int i=0;i<4;i++)
-					// {
-					// 	for(int j=0;j<4;j++)
-					// 	{
-					// 		std::cout<<joints[par].trans[i][j]<<" ";
-					// 	}
-					// 	std::cout<<"\n";
-					// }
-
-					std::cout<<"\nrot\n";
-					for(int i=0;i<4;i++)
-					{
-						for(int j=0;j<4;j++)
-						{
-							std::cout<<joints[s].rot[i][j]<<" ";
-						}
-						std::cout<<"\n";
-					}
-					std::cout<<"\n";
-
-					// std::cout<<"\nPar rot\n";
-					// for(int i=0;i<4;i++)
-					// {
-					// 	for(int j=0;j<4;j++)
-					// 	{
-					// 		std::cout<<joints[par].rot[i][j]<<" ";
-					// 	}
-					// 	std::cout<<"\n";
-					// }
-					// std::cout<<"\n";
-
-					// std::cout<<"\ntotal rot\n";
-					// for(int i=0;i<4;i++)
-					// {
-					// 	for(int j=0;j<4;j++)
-					// 	{
-					// 		std::cout<<joints[s].total_rot[i][j]<<" ";
-					// 	}
-					// 	std::cout<<"\n";
-					// }
-					// std::cout<<"\n";
-
-					// std::cout<<"\ncoords\n";
-					// for(int i=0;i<4;i++)
-					// {
-					// 	for(int j=0;j<4;j++)
-					// 	{
-					// 		std::cout<<joints[s].coords[i][j]<<" ";
-					// 	}
-					// 	std::cout<<"\n";
-					// }
-					// std::cout<<"\n\n";
-
-					// glm::mat4 test = glm::inverse(joints[par].coords);
-
-					// std::cout<<"\npar coords inverse\n";
-					// for(int i=0;i<4;i++)
-					// {
-					// 	for(int j=0;j<4;j++)
-					// 	{
-					// 		std::cout<<test[i][j]<<" ";
-					// 	}
-					// 	std::cout<<"\n";
-					// }
-					// std::cout<<"\n\n";
-
-					// std::cout<<"\naccum coords\n";
-					// accum = glm::inverse(accum);
-					// for(int i=0;i<4;i++)
-					// {
-					// 	for(int j=0;j<4;j++)
-					// 	{
-					// 		std::cout<<accum[i][j]<<" ";
-					// 	}
-					// 	std::cout<<"\n";
-					// }
-					// std::cout<<"\n\n";
-				}
-
 			} 
 			else
 			{

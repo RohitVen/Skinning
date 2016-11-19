@@ -14,27 +14,22 @@ namespace {
 	// Intersect a cylinder with radius 1/2, height 1, with base centered at
 	// (0, 0, 0) and up direction (0, 1, 0).
 	bool IntersectCylinder(const glm::vec3& origin, const glm::vec3& direction,
-			float radius, float height, float *t)
+			float radius, float height, float *t, int id)
 	{
 		//FIXME perform proper ray-cylinder collision detection
 
-		// std::cout<<"\nCenter: "<<center.x<<" "<<center.y<<" "<<center.z;
-		double a = (direction.x*direction.x) + (direction.y*direction.y);
-		double b = 2*(origin.x*direction.x) + 2*(origin.y*direction.y);
-		double c = (origin.x*origin.x) + (origin.y*origin.y) - (radius*radius); 
+		double a = (direction.y*direction.y) + (direction.z*direction.z);
+		double b = 2*(origin.y*direction.y) + 2*(origin.z*direction.z);
+		double c = (origin.y*origin.y) + (origin.z*origin.z) - (radius*radius); 
 		double discrim = pow(b,2) - 4*a*c;
-		std::cout<<"\ndiscrim: "<<discrim;
+		if(id == 1)
 		if(discrim < 0)
 		{
-			// std::cout<<"\nDiscrim is nan!!";
 			return false;
 		}
-		// std::cout<<"\na, b, c: "<<a<<" "<<b<<" "<<c;
-		// std::cout<<"\ndiscrim: "<<discrim;
 		discrim = sqrt(discrim);
 		float t1 = (-1*b + discrim)/(2*a);
 		float t2 = (-1*b - discrim)/(2*a);
-		// std::cout<<"\nt values: "<<t1<<" "<<t2;
 		if(t1 < 0 && t2 < 0)
 		{
 			return false;
@@ -42,27 +37,20 @@ namespace {
 
 		glm::vec3 check1 = glm::vec3(origin + (t1*direction));
 		glm::vec3 check2 = glm::vec3(origin + (t2*direction));
-		// std::cout<<"\ncheck1: "<<check1.x<<" "<<check1.y<<" "<<check1.z;
-		// std::cout<<"\ncheck2: "<<check2.x<<" "<<check2.y<<" "<<check2.z;
-		// std::cout<<"\n\n";
 
-		// if(check1.z > 0.0 && check2.z > 0.0)
-		// {
 
-		// }
-
-		if(check1.z > 0 && check1.z < height)
+		if(check1.x > 0 && check1.x < height)
 		{
 
-			t = &t1;
+			*t = t1;
 			return true;
 		}
-		if(check2.z > 0 && check2.z < height)
+		if(check2.x > 0 && check2.x < height)
 		{
-			t = &t2;
+			*t = t2;
+
 			return true;
 		}
-		// std::cout<<"\nt0 and t1: "<<t[0]<<" "<<t[1];
 
 		return false;
 	}
@@ -164,36 +152,31 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	// FIXME: highlight bones that have been moused over
 	
 	
-	glm::vec3 ray = ScreenToWorld(mouse_x, mouse_y, viewport);
-	glm::vec4 t_origin = glm::vec4(eye_,1);
-	glm::vec4 t_ray = glm::vec4(ray,0);
-
-for(int i = 0; i < 1/*mesh_->skeleton.joints.size()*/; i++)
+	glm::vec3 ray = ScreenToWorld(current_x_, current_y_, viewport);
+	ray = glm::normalize(ray);
+	current_bone_ = -1;
+	float old_t = 10000000;
+for(int i = 0; i < mesh_->skeleton.bones.size(); i++)
 	{
 		Bone b = mesh_->skeleton.bones[i];
-		t_origin = b.coords * t_origin;
-		t_ray = b.coords * t_ray;
+		glm::vec4 t_origin = glm::vec4(eye_,1);
+		glm::vec4 t_ray = glm::vec4(ray,0);
+		t_origin = glm::inverse(b.coords) * t_origin;
+		t_ray = glm::inverse(b.coords) * t_ray;
+
 		glm::vec3 origin = glm::vec3(t_origin.x, t_origin.y, t_origin.z);
 		glm::vec3 direction = glm::vec3(t_ray.x, t_ray.y, t_ray.z);
 
-		// origin = glm::normalize(origin);
-		// direction = glm::normalize(direction);
+		direction = glm::normalize(direction);
 
-		// std::cout<<"\norigin   : "<<origin.x<<" "<<origin.y<<" "<<origin.z;
-		// std::cout<<"\ndirection: "<<direction.x<<" "<<direction.y<<" "<<direction.z;
-		// std::cout<<"\n\n";
-		float *t;
+		float new_t = 100000000;
 		float len = (float) mesh_->skeleton.bones[i].length;
-		int collision = IntersectCylinder(origin, direction, kCylinderRadius, len, t);
-		if(collision == 1 && current_bone_ != i)
+		int collision = IntersectCylinder(origin, direction, kCylinderRadius, len, &new_t, i);
+
+		if(collision == 1 && new_t < old_t)
 		{
+			old_t = new_t;
 			current_bone_ = i;
-			std::cout<<"\nHIT A BONE!!!: "<<i;
-			break;
-		}
-		else
-		{
-			current_bone_ = -1;
 		}
 	}
 
@@ -204,8 +187,10 @@ for(int i = 0; i < 1/*mesh_->skeleton.joints.size()*/; i++)
 glm::vec3 GUI::ScreenToWorld(double x, double y, glm::uvec4 viewport)
 {
 	glm::vec3 p = glm::vec3(x, y, 0);
-	p = glm::unProject(p, model_matrix_, projection_matrix_, viewport);
-	glm::vec3 ray = p - eye_;
+	p = glm::unProject(p, view_matrix_* model_matrix_, projection_matrix_, viewport);
+	glm::vec3 q = glm::vec3(x, y, 1);
+	q = glm::unProject(q, view_matrix_* model_matrix_, projection_matrix_, viewport);
+	glm::vec3 ray = q - p;
 	return ray;
 }
 

@@ -305,6 +305,8 @@ int main(int argc, char* argv[])
 
 		if(draw_cylinder)
 		{
+			cyl_vertices.clear();
+			cyl_faces.clear();
 			create_cylinder(cyl_vertices, cyl_faces, mesh, current_bone); //Create cylinders!!
 			cyl_pass_input.assign(0, "vertex_postion", cyl_vertices.data(), cyl_vertices.size(), 4, GL_FLOAT);
 			cyl_pass_input.assign_index(cyl_faces.data(), cyl_faces.size(), 2);
