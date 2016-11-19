@@ -2,6 +2,7 @@
 #include "bone_geometry.h"
 #include "config.h"
 #include <iostream>
+#include <cmath>
 
 void create_floor(std::vector<glm::vec4>& floor_vertices, std::vector<glm::uvec3>& floor_faces)
 {
@@ -23,20 +24,16 @@ void create_bones(std::vector<glm::vec4>& bone_vertices, std::vector<glm::uvec2>
 	for(int i = 0; i < m.skeleton.bones.size(); i++)
 	{
 		b = m.skeleton.bones[i];
-		src = b.src;
-		dest = b.dest;
 		// std::cout<<"\nSrc and dest: "<<src<<" "<<dest;
-		j = m.skeleton.joints[src];
 
 		// bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
-		bone_vertices.push_back(glm::vec4(j.check,1.0f));
+		bone_vertices.push_back(glm::vec4(b.start,1));
 
 		// std::cout<<"\nsrc: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
 		// std::cout<<"\nsrc check: "<<j.check[0]<<" "<<j.check[1]<<" "<<j.check[2];
 		// std::cout<<"\n";
-		j = m.skeleton.joints[dest];
 		// bone_vertices.push_back(glm::vec4(j.jointOffset,1.0f));
-		bone_vertices.push_back(glm::vec4(j.check,1.0f));
+		bone_vertices.push_back(glm::vec4(b.end,1));
 
 		// std::cout<<"\ndest: "<<j.jointOffset[0]<<" "<<j.jointOffset[1]<<" "<<j.jointOffset[2];
 		// std::cout<<"\ndest check: "<<j.check[0]<<" "<<j.check[1]<<" "<<j.check[2];
@@ -47,6 +44,47 @@ void create_bones(std::vector<glm::vec4>& bone_vertices, std::vector<glm::uvec2>
 	for(int i = 0; i < 2*m.skeleton.bones.size(); i = i+2)
 	{
 		bone_faces.push_back(glm::uvec2(i,i+1));
+	}
+}
+
+void create_cylinder(std::vector<glm::vec4>& cyl_vertices, std::vector<glm::uvec2>& cyl_faces, Mesh &m, int bone)
+{
+	double radius = kCylinderRadius;
+	double toRad = M_PI/180;
+	double deg = 0;
+	int ind = 0;
+	int num = 0;
+	Bone b = m.skeleton.bones[bone];
+	double len = b.length;
+	while(deg < 360)
+	{
+		double rad = deg * toRad;
+		cyl_vertices.push_back(b.coords*(glm::vec4(0, radius*cos(rad), radius*sin(rad), 1)));
+		deg += 45;
+		rad = deg * toRad;
+		cyl_vertices.push_back(b.coords*(glm::vec4(0, radius*cos(rad), radius*sin(rad), 1)));
+	}
+	deg = 0;
+	while(deg < 360)
+	{
+		double rad = deg * toRad;
+		cyl_vertices.push_back(b.coords*(glm::vec4(len, radius*cos(rad), radius*sin(rad), 1)));
+		deg += 45;
+		rad = deg * toRad;
+		cyl_vertices.push_back(b.coords*(glm::vec4(len, radius*cos(rad), radius*sin(rad), 1)));
+	}
+	deg = 0;
+	while(deg < 360)
+	{
+		double rad = deg * toRad;
+		cyl_vertices.push_back(b.coords*(glm::vec4(0, radius*cos(rad), radius*sin(rad), 1)));
+		cyl_vertices.push_back(b.coords*(glm::vec4(len, radius*cos(rad), radius*sin(rad), 1)));
+		deg += 45;
+	}
+	while(ind < 48)
+	{
+		cyl_faces.push_back(glm::uvec2(ind, ind+1));
+		ind += 2;	
 	}
 }
 

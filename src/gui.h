@@ -40,6 +40,8 @@ public:
 	bool setCurrentBone(int i);
 
 	bool isTransparent() const { return transparent_; }
+
+	glm::vec3 ScreenToWorld(double x, double y, glm::uvec4 viewport);
 private:
 	GLFWwindow* window_;
 	Mesh* mesh_;

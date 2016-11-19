@@ -44,13 +44,13 @@ const char* bone_vertex_shader =
 R"zzz(
 #version 330 core
 uniform mat4 projection;
-uniform mat4 model;
+// uniform mat4 model;
 uniform mat4 view;
 in vec4 position;
 
 void main()
 {
-	gl_Position = projection * view * model * position;
+	gl_Position = projection * view * position;
 }
 )zzz";
 
@@ -61,6 +61,16 @@ out vec4 color;
 void main()
 {
 	color = vec4(255.0, 204.0, 0.0, 1.0);
+}
+)zzz";
+
+const char* cyl_fragment_shader =
+R"zzz(#version 330 core
+out vec4 color;
+
+void main()
+{
+	color = vec4(0.0, 191.0, 255.0, 1.0);
 }
 )zzz";
 
@@ -128,6 +138,10 @@ int main(int argc, char* argv[])
 	std::vector<glm::vec4> bone_vertices;
 	std::vector<glm::uvec2> bone_faces;
 	create_bones(bone_vertices, bone_faces, mesh); //Get the vertices of the bones!
+
+	std::vector<glm::vec4> cyl_vertices;
+	std::vector<glm::uvec2> cyl_faces;
+	
 
 	glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
@@ -224,6 +238,15 @@ int main(int argc, char* argv[])
 	bone_pass_input.assign_index(bone_faces.data(), bone_faces.size(), 2);
 	RenderPass bone_pass(-1, bone_pass_input, 
 		{bone_vertex_shader, nullptr, bone_fragment_shader}, 
+		{ std_view, std_proj}, 
+		{ "color" }
+		);
+
+	RenderDataInput cyl_pass_input;
+	cyl_pass_input.assign(0, "vertex_postion", cyl_vertices.data(), cyl_vertices.size(), 4, GL_FLOAT);
+	cyl_pass_input.assign_index(cyl_faces.data(), cyl_faces.size(), 2);
+	RenderPass cyl_pass(-1, cyl_pass_input, 
+		{bone_vertex_shader, nullptr, cyl_fragment_shader}, 
 		{std_model, std_view, std_proj}, 
 		{ "color" }
 		);
@@ -274,8 +297,24 @@ int main(int argc, char* argv[])
 		draw_bone = gui.isTransparent();
 		if(draw_bone)
 		{
+			// std::cout<<"\nABOUT TO DRAW CYLINDER!!";
+			// std::cout<<"\nABOUT TO DRAW CYLINDER!!";
 			bone_pass.setup();
 			CHECK_GL_ERROR(glDrawElements(GL_LINES, bone_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		}
+
+		if(draw_cylinder)
+		{
+			create_cylinder(cyl_vertices, cyl_faces, mesh, current_bone); //Create cylinders!!
+			cyl_pass_input.assign(0, "vertex_postion", cyl_vertices.data(), cyl_vertices.size(), 4, GL_FLOAT);
+			cyl_pass_input.assign_index(cyl_faces.data(), cyl_faces.size(), 2);
+			RenderPass cyl_pass(-1, cyl_pass_input, 
+				{bone_vertex_shader, nullptr, cyl_fragment_shader}, 
+				{std_model, std_view, std_proj}, 
+				{ "color" }
+				);
+			cyl_pass.setup();
+			CHECK_GL_ERROR(glDrawElements(GL_LINES, cyl_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		}
 
 
